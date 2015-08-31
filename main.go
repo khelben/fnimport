@@ -1,35 +1,31 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"sync"
 
+	// "github.com/jinzhu/gorm"
 	"github.com/khelben/fnimport/dto"
 	"github.com/khelben/fnimport/importers"
 )
 
 func main() {
-	// pois, err := importers.ReadFietsNetPois()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// importers.ImportFietsNetNodes(pois.Pois)
-
-	rtrees, err := importers.ReadFietsNetRtrees()
+	_, err := importers.ReadFietsNetRtrees()
 	if err != nil {
 		panic(err)
 	}
-	readTracks(rtrees.RootNode.Children)
-	// fmt.Printf("%#v\n", rtrees)
 }
 
-func readTracks(nodes []dto.Node) error {
-	for _, node := range nodes {
-		if node.Text != "" {
-			fmt.Printf("Track: %s\n", node.Text)
-		}
-		if len(node.Children) > 0 {
-			readTracks(node.Children)
-		}
-	}
-	return nil
+func loadTracks(trackname string, m *sync.WaitGroup) {
+	fmt.Printf(">>>> %s\n", trackname)
+	resp, _ := http.Get(fmt.Sprintf("http://api.fietsnet.be/v2/m1034/tracks/%s", trackname))
+	defer resp.Body.Close()
+	responseStream, _ := ioutil.ReadAll(resp.Body)
+
+	var response dto.TrackResponse
+	json.Unmarshal(responseStream, &response)
+	fmt.Printf("<<<< %s\n", trackname)
 }

@@ -2,6 +2,7 @@ package importers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -24,6 +25,17 @@ func ReadFietsNetRtrees() (response *dto.RtreesResponse, err error) {
 	if err != nil {
 		return
 	}
-	// fmt.Printf("json: %#v", response)
+	dumpRtrees(response.RootNode.Children)
 	return
+}
+
+func dumpRtrees(nodes []dto.Node) {
+	for _, node := range nodes {
+		if node.Text != "" {
+			fmt.Printf("Track: %s\n", node.Text)
+		}
+		if len(node.Children) > 0 {
+			dumpRtrees(node.Children)
+		}
+	}
 }
